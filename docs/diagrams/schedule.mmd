@@ -1,0 +1,52 @@
+---
+config:
+    theme: light
+gantt:
+    leftPadding: 200
+---
+gantt
+    title Messenger — Product Delivery Plan
+    dateFormat YYYY-MM-DD
+    axisFormat %b %d
+
+    section Project Definition
+    Statement of Work (SoW)                        :done, sow, 2026-10-05, 2d
+    Requirements Doc                               :active, requirements, after sow, 5d
+    Analysis Doc and Diagrams                      :active, analysis, after sow, 5d
+    Ethics Reflection                              :active, ethics, after sow, 5d
+    Documentation baseline approved                :milestone, doc_baseline, 2026-10-12, 0d
+
+    section Technology Selection
+    Technology stack evaluation spike              :crit, spike, 2026-10-07, 4d
+    Technology decision record                     :tdr, after spike, 1d
+    Technology decision recorded                   :milestone, tech_gate, after tdr, 0d
+
+    section Foundation
+    Development environment and CI setup           :crit, env, after tech_gate, 1d
+    Authentication and session handling            :auth, after env, 4d
+    Core messaging data model and API              :core, after env, 4d
+    Foundation ready                               :milestone, foundation_ready, after auth core, 0d
+
+    section Messenger Capabilities
+    Private messaging - send/receive path          :private_start, after foundation_ready, 1d
+    Private messaging read receipts                :private, after private_start, 3d
+    Group channels and membership                  :channels, after private_start, 3d
+    Blocking and channel access rules              :blocking, after foundation_ready, 3d
+    Message metadata, ordering, and read receipts  :metadata, after foundation_ready, 3d
+    Feature complete                               :milestone, feature_complete, after private channels blocking metadata, 0d
+
+    section Integration and Verification
+    Integrate authentication and messaging         :integration, after feature_complete, 2d
+    Automated test suite and acceptance testing    :e2e, after integration, 3d
+    Security, privacy, and permissions review      :security, after integration, 2d
+    Latency measurement and telemetry evidence     :telemetry, after integration, 1d
+    Corrections and regression testing             :fixes, after e2e security telemetry, 2d
+    Review build ready                             :milestone, review_ready, after fixes, 0d
+
+    section Review and Delivery
+    README and clean-machine setup verification    :runbook, after review_ready, 1d
+    Stakeholder review and demonstration           :review, after runbook, 1d
+    Final corrections and delivery notes           :final_check, after review, 1d
+    Planned final delivery                         :milestone, final_delivery, after final_check, 0d
+    Contingency buffer                             :buffer, after final_delivery, 2d
+    Latest acceptable delivery deadline            :milestone, deadline, 2026-11-02, 0d
