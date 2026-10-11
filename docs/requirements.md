@@ -32,9 +32,9 @@ The **Messenger** application is a campus-tailored real-time messaging system de
 ### Actors & External Systems
 
 + **Student User (Actor):** An authenticated end user who registers a profile, searches for verified campus peers via unique handles, transmits private direct messages, joins group channels, and manages a personal contact blocklist
-* **Group Administrator / Creator (Actor):** A Student User with elevated permissions over a specific group channel, capable of inviting users, removing members, and deleting policy-violating messages
+* **Group Administrator / Creator (Actor):** A Student User with elevated permissions over a specific group channel, capable of inviting users, and removing members
 * **Faculty Mentor / Evaluator (Actor):** System reviewer (Nick Stiffler) who provisions and verifies the system on a clean Debian Linux environment and executes automated test suites
-* **UD Identity & Authentication Service (External System Interface / Simulation):** External or simulated single-sign-on interface supplying student identity verification and two-factor authentication tokens
+* **UD Identity & Authentication Service (External System Interface / Simulation):** External or simulated campus identity provider supplying student identity verification and two-factor authentication tokens
 
 ---
 
@@ -49,8 +49,8 @@ The **Messenger** application is a campus-tailored real-time messaging system de
 
 ### Private Direct Messaging
 
-+ **FR-05 (Private Direct Message Transmission):** The system shall allow an authenticated user to transmit a text message directly to another authenticated user given their unique handle identifier
-+ **FR-06 (Real-Time DM Delivery):** The system shall push incoming direct messages in real time (latency <200ms) to the target recipient if an active client session exists
++ **FR-05 (Private Direct Message Transmission):** The system shall allow an authenticated user to transmit a text message directly to another registered user given their unique handle identifier
++ **FR-06 (Real-Time DM Delivery):** The system shall push incoming direct messages in real time, subject to the latency specified by NFR-01, to the target recipient if an active client session exists
 + **FR-07 (DM History Persistence & Retrieval):** The system shall persist direct messages in non-volatile storage and allow authenticated participants to retrieve chronological conversation history upon client reconnection
 
 ### Group Channel Messaging
@@ -68,13 +68,13 @@ The **Messenger** application is a campus-tailored real-time messaging system de
 
 ### Message Metadata, Ordering, & Telemetry
 
-+ **FR-16 (Monotonic Sequence Numbering):** The system shall assign a strictly increasing, gapless monotonic sequence number to every message generated within a conversation thread (DM or group channel)
-+ **FR-17 (Timestamping):** The system shall attach an ISO-8601 UTC server timestamp to every message object upon receipt at the core application boundary
-+ **FR-18 (Delivery & Read Receipts):** The system shall track and broadcast message telemetry states (`Sent`, `Delivered`, `Read`) to the message author as target clients receive and render the message
++ **FR-15 (Monotonic Sequence Numbering):** The system shall assign a strictly increasing, gapless monotonic sequence number to every message generated within a conversation thread (DM or group channel)
++ **FR-16 (Timestamping):** The system shall attach an ISO-8601 UTC server timestamp to every message object upon receipt at the core application boundary
++ **FR-17 (Delivery & Read Receipts):** The system shall track and broadcast message telemetry states (`Sent`, `Delivered`, `Read`) to the message author as target clients receive and render the message. Group channel broadcasts shall return the read count per member of the channel.
 
 ---
 
-## Non-Functional Requirements
+# Non-Functional Requirements
 
 ### Performance & Scalability
 + **NFR-01 (Real-Time Propagation Latency):** For a test cluster of up to 5 concurrent active client sessions, 95% of transmitted messages shall be delivered to target clients in under 200 milliseconds over local network transport
@@ -93,7 +93,7 @@ The **Messenger** application is a campus-tailored real-time messaging system de
 + **NFR-08 (Zero Paid Cloud Infrastructure):** The system shall run entirely on local host infrastructure (`localhost`) or open-source free-tier services, incurring zero commercial cloud hosting costs
 
 ### Testability & Software Quality
-+ **NFR-09 (Automated Test Coverage):** The automated test suite (`tests/`) shall achieve a 100% pass rate and contain at least one automated test script validating every acceptance criterion defined in Section 4
++ **NFR-09 (Automated Test Coverage):** The automated test suite (`tests/`) shall achieve a 100% pass rate and contain at least one automated test script validating every defined acceptance criterion
 
 ---
 
@@ -107,9 +107,9 @@ The **Messenger** application is a campus-tailored real-time messaging system de
 ### AC-02: Private Direct Messaging & Telemetry (FR-05, FR-06, FR-07, FR-18)
 + **Given** two active, authenticated users (`User A` and `User B`) with connected clients,
 + **When** `User A` sends direct message `"Hello B!"` to `User B`,
-+ **Then** `User B` receives `"Hello B!"` in real time (< 200ms), `User A`'s UI updates the message state from `Sent` to `Delivered`, and upon `User B` opening the view, `User A` observes state `Read`
++ **Then** `User B` receives `"Hello B!"` in real time, `User A`'s UI updates the message state from `Sent` to `Delivered`, and upon `User B` opening the view, `User A` observes state `Read`
 
-### AC-03: Group Broadcasting & Monotonic Sequence Convergence (FR-08, FR-09, FR-10, FR-16, NFR-03)
+### AC-03: Group Broadcasting & Monotonic Sequence Convergence (FR-08, FR-09, FR-10, FR-17, NFR-03)
 + **Given** a group channel containing three connected members (`User A`, `User B`, `User C`),
 + **When** `User A` and `User B` transmit messages nearly simultaneously,
 + **Then** the core application assigns strictly increasing sequence numbers `N` and `N+1`, and all three clients (`A`, `B`, `C`) render the messages in the exact same chronological sequence
@@ -140,7 +140,7 @@ The **Messenger** application is a campus-tailored real-time messaging system de
 
 ### Unresolved Questions & Decisions
 + **Question 1 (Offline Message Retention Window):** How long should undelivered messages persist for offline users?
-    + *Resolution / Decision:* Messages shall persist will a currently undecided Time To Live in local database storage (`D3 Message Store`) until explicitly retrieved upon client login
+    + *Resolution / Decision:* Messages shall persist with no Time To Live in local database storage (`D3 Message Store`) and persist for the life of the database
 + **Question 2 (Block Status Visibility):** Should a sender be explicitly informed that they have been blocked by the target user?
     + *Resolution / Decision:* To protect user privacy and prevent harassment escalation, the system shall return a generic delivery failure or silent drop indicator without disclosing the block status to the sender
 
@@ -153,7 +153,7 @@ The **Messenger** application is a campus-tailored real-time messaging system de
 
 ---
 
-## 7. Traceability
+# Traceability
 
 | Requirement ID | SoW Scope | Analysis Model Element | Target Deliverable | Acceptance Criterion |
 | :--- | :--- | :--- | :--- | :--- |

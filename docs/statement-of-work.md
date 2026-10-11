@@ -5,7 +5,7 @@
 > **Faculty mentor:** Nick Stiffler
 > **Project period:** 9/30 - 11/2
 > **Version:** 1.0
-> **Last Updated:** 10/6/2026
+> **Last Updated:** 10/11/2026
 
 ---
 
