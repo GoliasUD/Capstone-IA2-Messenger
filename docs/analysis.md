@@ -6,6 +6,8 @@ This analysis explains what the Data Flow Diagram and Sequence Diagram (located 
 
 ## 1. Data Flow Diagram
 
+![DFD](diagrams/data-flow_img.png)
+
 ### Engineering question
 
 Where does information enter Messenger, which processes transform or authorize it, where does it go, and what information must persist?
@@ -39,6 +41,8 @@ The telemetry flow now distinguishes three states: **Sent** after acceptance/per
 ---
 
 ## 2. Sequence Diagram
+
+![Sequence Diagram](diagrams/sequence_img.png)
 
 ### Engineering question
 
