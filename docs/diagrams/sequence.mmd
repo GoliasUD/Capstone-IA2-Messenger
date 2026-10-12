@@ -1,0 +1,60 @@
+---
+config:
+    theme: redux-dark-color
+---
+sequenceDiagram
+    autonumber
+    actor Sender
+    participant ClientUI
+    participant MessagingAPI@{ "type": "boundary" }
+    participant SessionStore@{ "type" : "database" }
+    participant BlocklistStore@{ "type" : "database" }
+    participant MessageStore@{ "type" : "database" }
+    actor Recipient
+
+    Note over Sender,MessageStore: Direct message scenario. Sender is User B and Recipient is User A. Sender must have an authenticated session (FR-01 to FR-04).
+    Sender->>ClientUI: Send direct message to User A with body Hello
+    ClientUI->>MessagingAPI: POST /api/v1/messages/direct with recipient, body, and session token
+    MessagingAPI->>SessionStore: Validate session token on this request
+    SessionStore-->>MessagingAPI: Session valid or invalid
+
+    alt Session invalid or expired
+        MessagingAPI-->>ClientUI: HTTP 401 or 403 Unauthorized
+        ClientUI-->>Sender: Ask user to authenticate again
+    else Session valid
+        MessagingAPI->>BlocklistStore: Check whether User A blocked User B
+        Note right of BlocklistStore: FR-13: Do not reveal the block state to User B.
+        BlocklistStore-->>MessagingAPI: Block relation found or not found
+
+        alt User A has blocked User B
+            MessagingAPI-->>ClientUI: Generic delivery failure or silent drop indicator
+            Note over MessagingAPI,Recipient: A blocked message is not stored or delivered. The block state is not disclosed.
+            ClientUI-->>Sender: Show only a generic failure indicator if returned
+        else Contact allowed
+            MessagingAPI->>MessageStore: Persist message with gapless sequence, ISO-8601 UTC timestamp, and SENT status
+            Note over MessageStore,Recipient: Persist before delivery acknowledgement (NFR-04). Sequence is strictly increasing (FR-16).
+            MessageStore-->>MessagingAPI: Stored message ID, sequence, timestamp, and SENT status
+            MessagingAPI-->>ClientUI: HTTP 200 with message ID, sequence, and SENT status
+            ClientUI-->>Sender: Display Sent
+
+            alt Recipient has an active client session
+                MessagingAPI-->>Recipient: Socket push with message ID, sequence, timestamp, and body
+                Recipient-->>MessagingAPI: Receive acknowledgement
+                MessagingAPI->>MessageStore: Update status to DELIVERED
+                MessageStore-->>MessagingAPI: DELIVERED status saved
+                MessagingAPI-->>ClientUI: Telemetry update with DELIVERED status
+                ClientUI-->>Sender: Display Delivered
+
+                Recipient->>ClientUI: Open conversation and render message
+                ClientUI->>MessagingAPI: Read event for message ID
+                MessagingAPI->>MessageStore: Update status to READ
+                MessageStore-->>MessagingAPI: READ status saved
+                MessagingAPI-->>ClientUI: Telemetry update with READ status
+                ClientUI-->>Sender: Display Read
+            else Recipient has no active client session
+                Note over MessagingAPI,MessageStore: Keep the message stored for later retrieval (FR-07). Status remains SENT until the recipient receives it.
+            end
+        end
+    end
+
+    Note over Sender,Recipient: AC-02 requires Sent status, then Delivered when the target receives the message, then Read when the recipient opens/renders it. For active clients, NFR-01 sets a p95 delivery target below 200 ms at up to five concurrent sessions.

@@ -1,0 +1,84 @@
+---
+config:
+    theme: redux-dark-color
+---
+flowchart LR
+    Student["External Actor<br/>Student User"]
+    Admin["External Actor<br/>Group Administrator / Creator"]
+
+    subgraph SYSTEM["Messenger System Boundary"]
+        direction LR
+        Client["Web / App Client"]
+        Interface["HTTP API and WebSocket Interface"]
+
+        subgraph LOGIC["Core Application Responsibilities"]
+            direction TB
+            Auth(["1.0 Register, Authenticate<br/>and Manage Sessions locally"])
+            Groups(["2.0 Manage Channels,<br/>Membership and Moderation<br/>"])
+            Blocks(["3.0 Manage and Check<br/>Contact Blocklists<br/>"])
+            Messages(["4.0 Authorize, Order,<br/>Persist and Route Messages<br/>"])
+            Telemetry(["5.0 Retrieve History and<br/>Update Delivery / Read Receipts<br/>"])
+        end
+
+        Accounts[("D1 User Profiles and Sessions")]
+        Access[("D2 Blocklists and Channel Membership")]
+        MessageStore[("D3 Message Store<br/>DMs and channel messages")]
+    end
+
+    Student -->|"Registration, login, DM, channel actions"| Client
+    Admin -->|"Invite or remove members"| Client
+    Client -->|"HTTPS requests session token"| Interface
+    Interface -->|"Login / registration data"| Auth
+    Auth -->|"Validate campus email verify salted hash<br/>issue or invalidate session"| Accounts
+    Accounts -->|"Profile and session result"| Auth
+    Auth -->|"Session token or authentication result"| Interface
+    Interface -->|"Login result"| Client
+
+    Interface -->|"Create channel, invite / remove member,<br/>moderation request with session"| Groups
+    Groups -->|"Create/update membership<br/>moderation action"| Access
+    Access -->|"Channel owner/admin and membership state"| Groups
+    Groups -->|"Channel / membership result"| Interface
+
+    Interface -->|"Add handle to personal blocklist"| Blocks
+    Blocks -->|"Persist block relation"| Access
+    Access -->|"Blocklist state"| Blocks
+    Blocks -->|"Blocklist update result"| Interface
+
+    Interface -->|"Direct or channel message<br/>with session token"| Messages
+    Messages -->|"Validate token on each request"| Accounts
+    Accounts -->|"Valid / invalid session"| Messages
+    Messages -->|"For a DM: check whether recipient blocked sender"| Blocks
+    Blocks -->|"Block decision block state remains private"| Messages
+    Messages -->|"For a channel: verify active membership"| Groups
+    Groups -->|"Authorized / rejected membership result"| Messages
+    Messages -->|"Persist before delivery acknowledgement"| MessageStore
+    MessageStore -->|"Stored message ID, sequence and state"| Messages
+    Messages -->|"Route to active authorized recipient(s)"| Interface
+    Interface -->|"Direct message or group broadcast"| Client
+
+    Client -->|"Delivery acknowledgement after receipt<br/>Read event after message is rendered"| Interface
+    Interface -->|"Receipt event with message ID and session"| Telemetry
+    Telemetry -->|"Validate session and update<br/>Delivered / Read state"| Accounts
+    Accounts -->|"Session result"| Telemetry
+    Telemetry -->|"Persist receipt state"| MessageStore
+    MessageStore -->|"Updated status and chronological history"| Telemetry
+    Interface -->|"History request after reconnect"| Telemetry
+    Telemetry -->|"Retrieve conversation history"| MessageStore
+    Telemetry -->|"Sent / Delivered / Read telemetry<br/>to message author"| Interface
+    Interface -->|"Receipt updates and history"| Client
+
+    BlockNote{{"Blocked DM"}}
+    BlockNote -.-> Blocks
+
+    classDef actor fill:#dbeafe,stroke:#2563eb,color:#0f172a
+    classDef interface fill:#e0f2fe,stroke:#0284c7,color:#0f172a
+    classDef process fill:#dcfce7,stroke:#16a34a,color:#0f172a
+    classDef store fill:#f1f5f9,stroke:#64748b,color:#0f172a
+    classDef note fill:#fef3c7,stroke:#d97706,color:#0f172a
+    class Student,Admin actor
+    class Client,Interface interface
+    class Auth,Groups,Blocks,Messages,Telemetry process
+    class Accounts,Access,MessageStore store
+    class BlockNote note
+
+
