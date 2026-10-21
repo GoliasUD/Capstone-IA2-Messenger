@@ -1,22 +1,55 @@
 import express from 'express';
-import { randomUUID } from 'node:crypto';
+import mongoose from 'mongoose';
+import { Note } from './models/Note.js';
+//import { randomUUID } from 'node:crypto';
 
 // create application
 const app = express();
 app.use(express.json({ limit: '16kb' }));
-const notes = [];
+//const notes = [];
 
 function health(_req, res) {
 	res.status(200).json({ status: 'ok' });
 }
 app.get('/api/health', health);
 
-function get_data(_req, res) {
-	res.status(200).json({ notes });
+function ready(_req, res) {
+	const isReady = mongoose.connection.readyState === 1;
+	return res.status(isReady ? 200 : 503).json({ status: isReady ? 'ready' : 'unavailable' });
+}
+app.get('/api/ready', ready);
+
+function available(_req, res, next) {
+	if (mongoose.connection.readyState !== 1) {
+		return res.status(503).json({ error: 'database unavailable' });
+	}
+	next();
+}
+app.use('/api/examples/notes', available);
+
+function noteView(doc) {
+	return {
+		id: doc._id.toString(),
+		text: doc.text,
+		createdAt: doc.createdAt
+	};
+}
+
+async function get_data(_req, res, next) {
+	try {
+		const docs = await Note.find()
+			.sort({ createdAt: -1, _id: -1 })
+			.limit(50)	// limits results to newest 50 notes; not full pagination
+			.lean();
+		return res.status(200).json({ notes: docs.map(noteView) });
+	} catch (err) {
+		next(err);
+	}
+	//res.status(200).json({ notes });
 }
 app.get('/api/examples/notes', get_data);
 
-function post_data(req, res) {
+async function post_data(req, res, next) {
 	const raw = req.body?.text;
 	if (typeof raw != 'string') {
 		return res.status(400).json({ error: 'invalid text' });
@@ -27,9 +60,15 @@ function post_data(req, res) {
 		return res.status(400).json({ error: 'invalid text' });
 	}
 	
-	const note = { id: randomUUID(), text };
-	notes.push(note);
-	return res.status(201).json({ note });
+	try {
+		const doc = await Note.create({ text });
+		return res.status(201).json({ note: noteView(doc) });
+	} catch (err) {
+		next(err);
+	}
+	//const note = { id: randomUUID(), text };
+	//notes.push(note);
+	//return res.status(201).json({ note });
 }
 app.post('/api/examples/notes', post_data);
 
@@ -54,4 +93,20 @@ function start_server() {
 	console.log('Listening on http://127.0.0.1:3000');
 }
 
-app.listen(3000, '127.0.0.1', start_server);
+// connect before listening for requests
+const mongoUri = process.env.MONGODB_URI ??
+	'mongodb://127.0.0.1:27018/capstone_notes_primer';
+  
+try {
+	await mongoose.connect(mongoUri, {
+		serverSelectionTimeoutMS: 5000
+	});
+	app.listen(3000, '127.0.0.1', () => {
+		console.log('Listening on http://127.0.0.1:3000');
+	});
+} catch (err) {
+	console.error('MongoDB connection failed:', err.message);
+	process.exitCode = 1;
+}
+
+// app.listen(3000, '127.0.0.1', start_server);

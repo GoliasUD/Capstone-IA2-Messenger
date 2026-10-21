@@ -13,7 +13,7 @@
 
 This Statement of Work (SoW) defines the engineering objectives, technical scope, architectural constraints, deliverables, and acceptance criteria outline of the messenger application - **Messenger**.
 
-Study groups, college friends, and student organizations currently coordinate across fragmented channels, such as email, text, Slack, GroupMe, and more. This requires transferring an unknown ID, creating barriers when connecting with others. Messenger addresses this by authenticating through the University of Dayton's login page, enforcing strict two-factor authentication, and easy access to searching for verified user in the UD community.
+Study groups, college friends, and student organizations currently coordinate across fragmented channels, such as email, text, Slack, GroupMe, and more. This requires transferring an unknown ID, creating barriers when connecting with others. Messenger addresses this by authenticating through a username and password, enforcing strict two-factor authentication, and easy access to searching for verified user in the UD community.
 
 The project will allow for private messaging and group communications, as well as allow users to create a profile with a unique identifier for adding friends. The technology stack is deliberately unselected at the moment, as it will be provided by the Faculty Mentor upon completion of initial documentation. The goal of this project is to apply software engineering principles, such as architectural  evaluation, documentation workflows, and automated verification.
 
@@ -102,7 +102,6 @@ The project will allow for private messaging and group communications, as well a
 
 1. **SoW Scope Approval:** formal sign-off on this document by Faculty Mentor prior to beginning messaging app development
 2. **Tech Evaluation Gate:** successful execution of the technology spike before locking down the database schema and transport architecture
-3. **University authentication access:** production UD login and 2FA integration require approval, interace details, and access from the relevant UDIT service owner
 
 ## 6. Milestones & Schedule
 

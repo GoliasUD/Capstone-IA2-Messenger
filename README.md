@@ -1,5 +1,53 @@
 # CPS 490 - Messenger App Documentation
 
+**Start docker container for MongoDB**
+
+```bash
+docker compose up -d mongodb
+docker compose ps
+```
+
+> Wait for healthy status
+
+**Run server**
+
+```bash
+node server.js
+```
+
+**Shutdown**
+
+```bash
+Ctrl + C
+docker compose down
+docker compose down -v
+```
+
+**Start front-end**
+
+```bash
+cd client/
+npm dev
+```
+
+> Runs React application for browser interaction
+
+> Stop server then either stop docker or stop and delete volumes
+
+**Tests**
+
+```bash
+node --test health.test.js
+```
+
+> Runs health test
+
+```bash
+node --test note.model.test.js
+```
+
+> Runs note whitespace test: trims all additional whitespace and rejects blank text notes
+
 ### Full-Stack Architecure & MERN Stack
 
 Message: A -> B

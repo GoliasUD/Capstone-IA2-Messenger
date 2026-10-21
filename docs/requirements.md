@@ -136,7 +136,7 @@ The **Messenger** application is a campus-tailored real-time messaging system de
 ### Assumptions
 1. **Host Environment:** Evaluators possess a standard Debian Linux virtual machine or bare-metal environment with terminal command-line access and internet connectivity for initial package fetching.
 2. **Concurrent Load Ceiling:** The maximum concurrent active load during review testing will not exceed 5 simultaneous connected client sessions
-3. **UD SSO Integration Scope:** Actual University of Dayton central LDAP/OAuth 2FA infrastructure requires special network permissions; therefore, identity authentication will be simulated using local secure user account records with campus email domain validation (`@udayton.edu`)
+3. **UD SSO Integration Scope:** Identity authentication will be simulated using local secure user account records with username and password
 
 ### Unresolved Questions & Decisions
 + **Question 1 (Offline Message Retention Window):** How long should undelivered messages persist for offline users?
