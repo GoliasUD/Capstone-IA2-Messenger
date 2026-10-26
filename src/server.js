@@ -1,6 +1,10 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import { Note } from './models/Note.js';
+import { PrimerUser } from './models/PrimerUser.js';
+import { authRouter } from './routes/auth.js';
+import { privateNotesRouter } from './routes/privateNotes.js';
+import { requireAuth } from './middleware/requireAuth.js'
 //import { randomUUID } from 'node:crypto';
 
 // create application
@@ -18,6 +22,15 @@ function ready(_req, res) {
 	return res.status(isReady ? 200 : 503).json({ status: isReady ? 'ready' : 'unavailable' });
 }
 app.get('/api/ready', ready);
+
+function requireDatabase(_req, res, next) {
+	if (mongoose.connection.readyState !== 1) {
+		return res.status(503).json({ error: 'database unavailable' });
+	}
+	next();
+}
+app.use('/api/auth', requireDatabase, authRouter);
+app.use('/api/private/notes', requireDatabase, requireAuth, privateNotesRouter);
 
 function available(_req, res, next) {
 	if (mongoose.connection.readyState !== 1) {
@@ -99,8 +112,9 @@ const mongoUri = process.env.MONGODB_URI ??
   
 try {
 	await mongoose.connect(mongoUri, {
-		serverSelectionTimeoutMS: 5000
+	  serverSelectionTimeoutMS: 5000
 	});
+	await PrimerUser.init();
 	app.listen(3000, '127.0.0.1', () => {
 		console.log('Listening on http://127.0.0.1:3000');
 	});
