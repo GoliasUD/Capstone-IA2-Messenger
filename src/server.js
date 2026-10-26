@@ -6,12 +6,17 @@ import { authRouter } from './routes/auth.js';
 import { privateNotesRouter } from './routes/privateNotes.js';
 import { requireAuth } from './middleware/requireAuth.js'
 import { studyRouter } from './routes/study.js';
-//import { randomUUID } from 'node:crypto';
+import { createServer } from 'node:http';
+import { Server } from 'socket.io';
+import { attachStudySockets } from './realtime/studySockets.js';
 
 // create application
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer);
+attachStudySockets(io);
+app.set('studyIo', io);
 app.use(express.json({ limit: '16kb' }));
-//const notes = [];
 
 function health(_req, res) {
 	res.status(200).json({ status: 'ok' });
@@ -60,7 +65,6 @@ async function get_data(_req, res, next) {
 	} catch (err) {
 		next(err);
 	}
-	//res.status(200).json({ notes });
 }
 app.get('/api/examples/notes', get_data);
 
@@ -81,9 +85,6 @@ async function post_data(req, res, next) {
 	} catch (err) {
 		next(err);
 	}
-	//const note = { id: randomUUID(), text };
-	//notes.push(note);
-	//return res.status(201).json({ note });
 }
 app.post('/api/examples/notes', post_data);
 
@@ -111,18 +112,16 @@ function start_server() {
 // connect before listening for requests
 const mongoUri = process.env.MONGODB_URI ??
 	'mongodb://127.0.0.1:27018/capstone_notes_primer';
-  
+
 try {
 	await mongoose.connect(mongoUri, {
 	  serverSelectionTimeoutMS: 5000
 	});
 	await PrimerUser.init();
-	app.listen(3000, '127.0.0.1', () => {
+	httpServer.listen(3000, '127.0.0.1', () => {
 		console.log('Listening on http://127.0.0.1:3000');
 	});
 } catch (err) {
 	console.error('MongoDB connection failed:', err.message);
 	process.exitCode = 1;
 }
-
-// app.listen(3000, '127.0.0.1', start_server);
