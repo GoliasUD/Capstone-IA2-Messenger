@@ -5,6 +5,7 @@ import { PrimerUser } from './models/PrimerUser.js';
 import { authRouter } from './routes/auth.js';
 import { privateNotesRouter } from './routes/privateNotes.js';
 import { requireAuth } from './middleware/requireAuth.js'
+import { studyRouter } from './routes/study.js';
 //import { randomUUID } from 'node:crypto';
 
 // create application
@@ -31,6 +32,7 @@ function requireDatabase(_req, res, next) {
 }
 app.use('/api/auth', requireDatabase, authRouter);
 app.use('/api/private/notes', requireDatabase, requireAuth, privateNotesRouter);
+app.use('/api/study', requireDatabase, requireAuth, studyRouter);
 
 function available(_req, res, next) {
 	if (mongoose.connection.readyState !== 1) {
