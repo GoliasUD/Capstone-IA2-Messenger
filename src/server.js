@@ -8,13 +8,13 @@ import { requireAuth } from './middleware/requireAuth.js'
 import { studyRouter } from './routes/study.js';
 import { createServer } from 'node:http';
 import { Server } from 'socket.io';
-import { attachStudySockets } from './realtime/studySockets.js';
+import { attachStudySocket } from './realtime/studySocket.js';
 
 // create application
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer);
-attachStudySockets(io);
+attachStudySocket(io);
 app.set('studyIo', io);
 app.use(express.json({ limit: '16kb' }));
 

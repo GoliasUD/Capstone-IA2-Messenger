@@ -5,7 +5,7 @@ import { appendStudyEntry, studyBoardRoom } from '../study/appendEntry.js';
 
 const idPattern = /^[0-9a-f]{24}$/i;
 
-export function attachStudySockets(io) {
+export function attachStudySocket(io) {
     io.use((socket, next) => {
         try {
             const token = socket.handshake.auth?.token;
